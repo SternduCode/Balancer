@@ -1,4 +1,4 @@
-@file:JvmName("Tester")
+@file:JvmName("TesterKt")
 package com.sterndu.network.balancer
 
 import java.util.*
