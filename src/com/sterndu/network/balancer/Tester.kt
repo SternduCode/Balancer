@@ -40,7 +40,7 @@ object Tester {
 	@JvmStatic
 	fun main(args: Array<String>) {
 		val st = System.currentTimeMillis()
-		Tester.func2(15000)
+		func2(15000)
 		val et = System.currentTimeMillis()
 		println((et - st).toString() + " ms")
 	}
@@ -62,7 +62,7 @@ fun main() {
 		r, 80000L, 200L, 20000L, cores,
 		2000, System.out
 	)
-	println("S means Singlecore Score; M means Multicore Score")
+	println("S means SingleCore Score; M means MultiCore Score")
 	println(
 		"B means Score is determined by performance in the first test;\nB2 means Score is determined by performance in the second Test"
 	)
