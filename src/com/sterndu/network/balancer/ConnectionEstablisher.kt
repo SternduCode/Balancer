@@ -1,8 +1,6 @@
 @file:JvmName("ConnectionEstablisher")
 package com.sterndu.network.balancer
 
-import com.sterndu.util.interfaces.ThrowingBiFunction
-import com.sterndu.util.interfaces.ThrowingFunction
 import java.io.Closeable
 import java.io.IOException
 import java.io.InputStream
@@ -10,8 +8,8 @@ import java.io.OutputStream
 import java.net.*
 
 object ConnectionEstablisher {
-	private val gateways: MutableList<ThrowingBiFunction<String, Int, Connection, IOException>> = ArrayList()
-	private val hosts: MutableList<ThrowingFunction<Int, Host, IOException>> = ArrayList()
+	private val gateways: MutableList<(String, Int) -> Connection> = ArrayList()
+	private val hosts: MutableList<(Int) -> Host> = ArrayList()
 
 	init {
 		addGateway { address: String, port: Int ->
@@ -22,26 +20,26 @@ object ConnectionEstablisher {
 		addHost { port: Int -> ImplHost(port) }
 	}
 
-	fun addGateway(gateway: ThrowingBiFunction<String, Int, Connection, IOException>) {
+	fun addGateway(gateway: (String, Int) -> Connection) {
 		gateways.add(gateway)
 	}
 
-	fun addGateway(gateway: ThrowingBiFunction<String, Int, Connection, IOException>, index: Int) {
+	fun addGateway(gateway: (String, Int) -> Connection, index: Int) {
 		gateways.add(index, gateway)
 	}
 
-	fun addHost(host: ThrowingFunction<Int, Host, IOException>) {
+	fun addHost(host: (Int) -> Host) {
 		hosts.add(host)
 	}
 
-	fun addHost(host: ThrowingFunction<Int, Host, IOException>, index: Int) {
+	fun addHost(host: (Int) -> Host, index: Int) {
 		hosts.add(index, host)
 	}
 
 	@Throws(IOException::class)
 	fun establishConnection(address: String, port: Int): Connection? {
 		for (bi in gateways) try {
-			return bi.apply(address, port)
+			return bi(address, port)
 		} catch (e: IOException) {
 			throw IOException("Could not connect:$address:$port")
 		}
@@ -51,7 +49,7 @@ object ConnectionEstablisher {
 	@Throws(IOException::class)
 	fun establishConnection(address: String, port: Int, index: Int): Connection {
 		return try {
-			gateways[index].apply(address, port)
+			gateways[index](address, port)
 		} catch (e: IOException) {
 			throw IOException("Could not connect:$address:$port")
 		}
@@ -60,7 +58,7 @@ object ConnectionEstablisher {
 	@Throws(IOException::class)
 	fun hostConnection(port: Int): Host? {
 		for (bi in hosts) try {
-			return bi.apply(port)
+			return bi(port)
 		} catch (e: IOException) {
 			throw IOException("Could not create:$port")
 		}
@@ -70,7 +68,7 @@ object ConnectionEstablisher {
 	@Throws(IOException::class)
 	fun hostConnection(port: Int, index: Int): Host {
 		return try {
-			hosts[index].apply(port)
+			hosts[index](port)
 		} catch (e: IOException) {
 			throw IOException("Could not create:$port")
 		}
